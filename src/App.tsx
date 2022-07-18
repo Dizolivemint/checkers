@@ -11,11 +11,13 @@ function App() {
   const [player, setPlayer] = useState('X');
   const [winner, setWinner] = useState('');
   const [turn, setTurn] = useState(0);
-  const [selectedPiece, setSelectedPiece] = useState<Array<number>>([0, 0]);
+  const [selectedPiece, setSelectedPiece] = useState<Array<number>>([-1, -1]);
 
   // Initialize board
   useEffect(() => {
     setBoardSize(8);
+    setPlayer('X');
+    setTurn(0);
   }, []);
 
   useEffect(() => {
@@ -81,20 +83,71 @@ function App() {
   , [boardSize]);
 
   // Check if move is capturing
-  const isCapturing = (row: number, col: number, player: string) => {
+  const isCapturing = (row: number, col: number, player: string, piece: Array<number> = selectedPiece) => {
+    const newBoard = [...board];
     if (player === 'X') {
-      if (row - 1 >= 0 && col - 1 >= 0 && board[row - 1][col - 1] === 'B') {
-        return true;
-      }
-      if (row - 1 >= 0 && col + 1 < boardSize && board[row - 1][col + 1] === 'B') {
-        return true;
+      if (
+        row - piece[0] === 2 && 
+        board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('O'))
+      {
+        if ((row - piece[0]) / (col - piece[1]) === 1) {
+          newBoard[row - 1][col - 1] = ' ';
+          setBoard(newBoard);
+          return true;
+        } else if ((row - piece[0]) / (col - piece[1]) === -1) {
+          newBoard[row - 1][col + 1] = ' ';
+          setBoard(newBoard);
+          return true;
+        }
       }
     } else {
-      if (row + 1 < boardSize && col - 1 >= 0 && board[row + 1][col - 1] === 'W') {
-        return true;
+      if (
+        row - piece[0] === -2 && 
+        board[(piece[0] + row) / 2][(piece[1] + col) / 2] === 'X')
+      {
+        if ((row - piece[0]) / (col - piece[1]) === -1) {
+          newBoard[row + 1][col - 1] = ' ';
+          setBoard(newBoard);
+          return true;
+        } else if ((row - piece[0]) / (col - piece[1]) === 1) {
+          newBoard[row + 1][col + 1] = ' ';
+          setBoard(newBoard);
+          return true;
+        }
       }
-      if (row + 1 < boardSize && col + 1 < boardSize && board[row + 1][col + 1] === 'W') {
-        return true;
+    }
+    return false;
+  }
+
+  // Check if can be captured
+  const canBeCapturing = (row: number, col: number, player: string, piece: Array<number> = selectedPiece) => {
+    if (row > boardSize - 1 || col > boardSize - 1 || row < 0 || col < 0) { 
+      return false
+    }
+    if (board[row][col].includes('O') || board[row][col].includes('X')) {
+      return false
+    }
+    if (player === 'X') {
+      if (
+        row - piece[0] === 2 && 
+        board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('O'))
+      {
+        if ((row - piece[0]) / (col - piece[1]) === 1) {
+          return true;
+        } else if ((row - piece[0]) / (col - piece[1]) === -1) {
+          return true;
+        }
+      }
+    } else {
+      if (
+        row - piece[0] === -2 && 
+        board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('X'))
+      {
+        if ((row - piece[0]) / (col - piece[1]) === -1) {
+          return true;
+        } else if ((row - piece[0]) / (col - piece[1]) === 1) {
+          return true;
+        }
       }
     }
     return false;
@@ -102,40 +155,101 @@ function App() {
 
   // Check if move is valid
   const isValidMove = (row: number, col: number, player: string) => {
+    if (player === 'X' || board[selectedPiece[0]][selectedPiece[1]] === 'OK') {
+      if (row === selectedPiece[0] + 1 && col === selectedPiece[1] + 1 ) return true
+      if (row === selectedPiece[0] + 1 && col === selectedPiece[1] - 1 ) return true
+    } else if (player === 'O' || board[selectedPiece[0]][selectedPiece[1]] === 'XK') {
+      if (row === selectedPiece[0] - 1 && col === selectedPiece[1] + 1 ) return true
+      if (row === selectedPiece[0] - 1 && col === selectedPiece[1] - 1 ) return true
+    }
+    if (isCapturing(row, col, player)) {
+      return 'captured'
+    } 
+    return false;
+  }
+
+  const isCapturingPossible = (row: number, col: number, player: string) => {
+    let newRow = row + 2;
+    let newCol = col + 2;
+    if (canBeCapturing(newRow, newCol, player, [row, col])) {
+      return true
+    }
+    newRow = row - 2;
+    newCol = col - 2;
+    if (canBeCapturing(newRow, newCol, player, [row, col])) {
+      return true
+    }
+    newRow = row + 2;
+    newCol = col - 2;
+    if (canBeCapturing(newRow, newCol, player, [row, col])) {
+      return true
+    }
+    newRow = row - 2;
+    newCol = col + 2;
+    if (canBeCapturing(newRow, newCol, player, [row, col])) {
+      return true
+    }
+    return false
+  }
+
+  // Check if piece made it to the other side and turn it into a king
+  const isKing = (row: number, col: number, player: string) => {
     if (player === 'X') {
-      if (row - 1 >= 0 && col - 1 >= 0 && board[row - 1][col - 1] === 'B') {
-        return true;
-      }
-      if (row - 1 >= 0 && col + 1 < boardSize && board[row - 1][col + 1] === 'B') {
+      if (row === boardSize - 1) {
+        const newBoard = [...board];
+        newBoard[row][col] = 'XK';
+        setBoard(newBoard);
         return true;
       }
     } else {
-      if (row + 1 < boardSize && col - 1 >= 0 && board[row + 1][col - 1] === 'W') {
-        return true;
-      }
-      if (row + 1 < boardSize && col + 1 < boardSize && board[row + 1][col + 1] === 'W') {
+      if (row === 0) {
+        const newBoard = [...board];
+        newBoard[row][col] = 'OK';
+        setBoard(newBoard);
         return true;
       }
     }
     return false;
   }
 
-  const handleClick = (i: number, j: number) => {
-    if (gameOver || board[i][j] !== ' ') {
+
+  const handleSpaceClick = (i: number, j: number) => {
+    if (
+      gameOver || 
+      board[i][j] === 'B' || 
+      board[i][j].includes('O') || 
+      board[i][j].includes('X') || 
+      selectedPiece[0] === -1
+    ) {
       return;
     }
+    const move: boolean | string = isValidMove(i, j, player)
+    if (!move) {
+      return
+    }  
     const boardCopy = [...board];
-    boardCopy[i][j] = player;
+    boardCopy[i][j] = boardCopy[selectedPiece[0]][selectedPiece[1]];
+    boardCopy[selectedPiece[0]][selectedPiece[1]] = ' ';
     setBoard(boardCopy);
+    
+    if (move === 'captured') {
+      if (isCapturingPossible(i, j, player)) {
+        setSelectedPiece([i, j]);
+        return
+      }
+    }
+
+    isKing(i, j, player)
+
     setTurn(turn + 1);
     setPlayer(player === 'X' ? 'O' : 'X');
+    setSelectedPiece([-1, -1]);
   }
 
+
+
   const handlePieceClick = (i: number, j: number) => {
-    if (gameOver || board[i][j] !== player) {
-      return;
-    }
-    if (board[i][j] === player) {
+    if (!gameOver && board[i][j].includes(player)) {
       setSelectedPiece([i, j]);
     }
   }
@@ -165,12 +279,13 @@ function App() {
                 <div
                   key={cellIndex}
                   className={`cell ${cell}`}
-                  onClick={() => handleClick(rowIndex, cellIndex)}
+                  onClick={() => handleSpaceClick(rowIndex, cellIndex)}
                 >
                   <div 
-                    className={`piece ${cell}`}
+                    className={`piece ${cell} ${selectedPiece[0] === rowIndex && selectedPiece[1] === cellIndex ? 'selected' : ''}`}
                     onClick={() => handlePieceClick(rowIndex, cellIndex)}
-                  />
+                  >
+                  </div>
                 </div>
               ))}
             </div>

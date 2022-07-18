@@ -55,7 +55,7 @@
   background-color: white;
 }
 
-.piece.O {
+.piece.O, .piece.OK {
   background-color: red;
   border-radius: 100%;
   border: .25rem solid #000;
@@ -63,7 +63,7 @@
   height: 90%;
 }
 
-.piece.X {
+.piece.X, .piece.XK {
   background-color: blue;
   border-radius: 100%;
   border: .25rem solid #000;
@@ -91,4 +91,27 @@
 
 .cell .W {
   color: white;
+}
+
+.piece.X.selected, .piece.XK.selected {
+  background-color: #61dafb;
+  border-radius: 100%;
+  border: .25rem solid #000;
+  width: 90%;
+  height: 90%;
+}
+
+.piece.O.selected, .piece.OK.selected {
+  background-color: #d43838;
+  border-radius: 100%;
+  border: .25rem solid #000;
+  width: 90%;
+  height: 90%;
+}
+
+.piece.OK, .piece.XK {
+  background-image: url("../public/crown.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
