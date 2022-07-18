@@ -85,7 +85,7 @@ function App() {
   // Check if move is capturing
   const isCapturing = (row: number, col: number, player: string, piece: Array<number> = selectedPiece) => {
     const newBoard = [...board];
-    if (player === 'X') {
+    if (board[piece[0]][piece[1]] === 'X') {
       if (
         row - piece[0] === 2 && 
         board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('O'))
@@ -100,10 +100,40 @@ function App() {
           return true;
         }
       }
-    } else {
+    } else if (board[piece[0]][piece[1]] === 'O') {
       if (
         row - piece[0] === -2 && 
         board[(piece[0] + row) / 2][(piece[1] + col) / 2] === 'X')
+      {
+        if ((row - piece[0]) / (col - piece[1]) === -1) {
+          newBoard[row + 1][col - 1] = ' ';
+          setBoard(newBoard);
+          return true;
+        } else if ((row - piece[0]) / (col - piece[1]) === 1) {
+          newBoard[row + 1][col + 1] = ' ';
+          setBoard(newBoard);
+          return true;
+        }
+      }
+    } else if (board[piece[0]][piece[1]] === 'OK') {
+      if (
+        row - piece[0] === 2 && 
+        board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('X'))
+      {
+        if ((row - piece[0]) / (col - piece[1]) === 1) {
+          newBoard[row - 1][col - 1] = ' ';
+          setBoard(newBoard);
+          return true;
+        } else if ((row - piece[0]) / (col - piece[1]) === -1) {
+          newBoard[row - 1][col + 1] = ' ';
+          setBoard(newBoard);
+          return true;
+        }
+      }
+    } else {
+      if (
+        row - piece[0] === -2 && 
+        board[(piece[0] + row) / 2][(piece[1] + col) / 2] === 'O')
       {
         if ((row - piece[0]) / (col - piece[1]) === -1) {
           newBoard[row + 1][col - 1] = ' ';
@@ -120,14 +150,14 @@ function App() {
   }
 
   // Check if can be captured
-  const canBeCapturing = (row: number, col: number, player: string, piece: Array<number> = selectedPiece) => {
+  const canBeCapturing = (row: number, col: number, piece: Array<number> = selectedPiece) => {
     if (row > boardSize - 1 || col > boardSize - 1 || row < 0 || col < 0) { 
       return false
     }
     if (board[row][col].includes('O') || board[row][col].includes('X')) {
       return false
     }
-    if (player === 'X') {
+    if (board[piece[0]][piece[1]] === 'X') {
       if (
         row - piece[0] === 2 && 
         board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('O'))
@@ -138,10 +168,32 @@ function App() {
           return true;
         }
       }
-    } else {
+    } else if (board[piece[0]][piece[1]] === 'O') {
       if (
         row - piece[0] === -2 && 
         board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('X'))
+      {
+        if ((row - piece[0]) / (col - piece[1]) === -1) {
+          return true;
+        } else if ((row - piece[0]) / (col - piece[1]) === 1) {
+          return true;
+        }
+      }
+    } else if (board[piece[0]][piece[1]] === 'OK') {
+      if (
+        row - piece[0] === 2 && 
+        board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('X'))
+      {
+        if ((row - piece[0]) / (col - piece[1]) === 1) {
+          return true;
+        } else if ((row - piece[0]) / (col - piece[1]) === -1) {
+          return true;
+        }
+      }
+    } else {
+      if (
+        row - piece[0] === -2 && 
+        board[(piece[0] + row) / 2][(piece[1] + col) / 2].includes('O'))
       {
         if ((row - piece[0]) / (col - piece[1]) === -1) {
           return true;
@@ -154,11 +206,11 @@ function App() {
   }
 
   // Check if move is valid
-  const isValidMove = (row: number, col: number, player: string) => {
-    if (player === 'X' || board[selectedPiece[0]][selectedPiece[1]] === 'OK') {
+  const isValidMove = (row: number, col: number) => {
+    if (board[selectedPiece[0]][selectedPiece[1]] === 'X' || board[selectedPiece[0]][selectedPiece[1]] === 'OK') {
       if (row === selectedPiece[0] + 1 && col === selectedPiece[1] + 1 ) return true
       if (row === selectedPiece[0] + 1 && col === selectedPiece[1] - 1 ) return true
-    } else if (player === 'O' || board[selectedPiece[0]][selectedPiece[1]] === 'XK') {
+    } else if (board[selectedPiece[0]][selectedPiece[1]] === 'O' || board[selectedPiece[0]][selectedPiece[1]] === 'XK') {
       if (row === selectedPiece[0] - 1 && col === selectedPiece[1] + 1 ) return true
       if (row === selectedPiece[0] - 1 && col === selectedPiece[1] - 1 ) return true
     }
@@ -168,25 +220,25 @@ function App() {
     return false;
   }
 
-  const isCapturingPossible = (row: number, col: number, player: string) => {
+  const isCapturingPossible = (row: number, col: number) => {
     let newRow = row + 2;
     let newCol = col + 2;
-    if (canBeCapturing(newRow, newCol, player, [row, col])) {
+    if (canBeCapturing(newRow, newCol, [row, col])) {
       return true
     }
     newRow = row - 2;
     newCol = col - 2;
-    if (canBeCapturing(newRow, newCol, player, [row, col])) {
+    if (canBeCapturing(newRow, newCol, [row, col])) {
       return true
     }
     newRow = row + 2;
     newCol = col - 2;
-    if (canBeCapturing(newRow, newCol, player, [row, col])) {
+    if (canBeCapturing(newRow, newCol, [row, col])) {
       return true
     }
     newRow = row - 2;
     newCol = col + 2;
-    if (canBeCapturing(newRow, newCol, player, [row, col])) {
+    if (canBeCapturing(newRow, newCol, [row, col])) {
       return true
     }
     return false
@@ -223,7 +275,7 @@ function App() {
     ) {
       return;
     }
-    const move: boolean | string = isValidMove(i, j, player)
+    const move: boolean | string = isValidMove(i, j)
     if (!move) {
       return
     }  
@@ -233,7 +285,7 @@ function App() {
     setBoard(boardCopy);
     
     if (move === 'captured') {
-      if (isCapturingPossible(i, j, player)) {
+      if (isCapturingPossible(i, j)) {
         setSelectedPiece([i, j]);
         return
       }
