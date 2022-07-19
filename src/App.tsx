@@ -36,6 +36,7 @@ function App() {
       }
     }
     setBoard(board);
+    setTurn(1);
   }
   , [boardSize]);
 
@@ -91,26 +92,36 @@ function App() {
 
   // If turn is player O, make a move
   useEffect(() => {
-    if (turn < 1 || player !== 'O') return
-    let spaces = [], pieces = []
+    console.log(turn)
+    console.log(player)
+    if (turn < 1) return
+    let spaces: Array<Array<number>> = [], pieces: Array<Array<number>> = []
     
     for (let i = 0; i < boardSize; i++) {
       for (let j = 0; j < boardSize; j++) {
         if (board[i][j] === ' ') {
           spaces.push([i, j])
-        } else if (board[i][j].includes('O')) {
+        } else if (board[i][j].includes(player)) {
           pieces.push([i, j])
         }
       }
     }
     if (selectedPiece[0] != -1) {
-      if (board[selectedPiece[0]][selectedPiece[1]].includes('O')) {
+      if (board[selectedPiece[0]][selectedPiece[1]].includes(player)) {
         pieces = [[selectedPiece[0], selectedPiece[1]]]
       }
     }
-    checkMoves(spaces, pieces)
-
+    setTimeout(() => {
+      checkMoves(spaces, pieces)  
+    }, 50);
+    
   }, [turn]);
+
+  // Record board to localStorage
+  useEffect(() => {
+    localStorage.setItem(`board${turn}`, JSON.stringify(board));
+  }
+  , [board]);
 
   const checkMoves = (spaces: Array<Array<number>>, pieces: Array<Array<number>>) => {
     const piece = pieces[Math.floor(Math.random() * pieces.length)]
@@ -126,16 +137,29 @@ function App() {
     }
     for (let i = 0; i < spaces.length; i++) {
       const space = spaces[i]
-      if (space[0] === row - 1 && space[1] === column - 1) {
-        setSelectedPiece([row, column])
-        handleSpaceClick(space[0], space[1], piece)
-        return
-      } else if (space[0] === row - 1 && space[1] === column + 1) {
-        setSelectedPiece([row, column])
-        handleSpaceClick(space[0], space[1], piece)
-        return
+      if (player === 'O') {
+        if (space[0] === row - 1 && space[1] === column - 1) {
+          setSelectedPiece([row, column])
+          handleSpaceClick(space[0], space[1], piece)
+          return
+        } else if (space[0] === row - 1 && space[1] === column + 1) {
+          setSelectedPiece([row, column])
+          handleSpaceClick(space[0], space[1], piece)
+          return
+        }
+        if (board[piece[0]][piece[1]] === 'OK') {
+          if (space[0] === row + 1 && space[1] === column - 1) {
+            setSelectedPiece([row, column])
+            handleSpaceClick(space[0], space[1], piece)
+            return
+          } else if (space[0] === row + 1 && space[1] === column + 1) {
+            setSelectedPiece([row, column])
+            handleSpaceClick(space[0], space[1], piece)
+            return
+          }
+        }
       }
-      if (board[piece[0]][piece[1]] === 'OK') {
+      if (player === 'X') {
         if (space[0] === row + 1 && space[1] === column - 1) {
           setSelectedPiece([row, column])
           handleSpaceClick(space[0], space[1], piece)
@@ -145,7 +169,20 @@ function App() {
           handleSpaceClick(space[0], space[1], piece)
           return
         }
+        if (board[piece[0]][piece[1]] === 'XK') {
+          if (space[0] === row - 1 && space[1] === column - 1) {
+            setSelectedPiece([row, column])
+            handleSpaceClick(space[0], space[1], piece)
+            return
+          } else if (space[0] === row - 1 && space[1] === column + 1) {
+            setSelectedPiece([row, column])
+            handleSpaceClick(space[0], space[1], piece)
+            return
+          }
+        }
       }
+
+      
     }
     const leftOvers = pieces.filter(val => val !== piece)
     console.log('pieces left', leftOvers)
