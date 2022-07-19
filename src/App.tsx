@@ -91,7 +91,7 @@ function App() {
 
   // If turn is player O, make a move
   useEffect(() => {
-    if (turn < 1 || player !== 'O') return
+    if (turn < 1 || player !== 'O' || !gameOver) return
     let spaces = [], pieces = []
     
     for (let i = 0; i < boardSize; i++) {
